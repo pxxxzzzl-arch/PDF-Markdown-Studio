@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pdf-markdown-studio"
+version = "0.8.0"
+description = "Local-first PDF to Markdown converter with pluggable parsing engines and quality gates"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+  "fastapi>=0.115,<1",
+  "pydantic>=2.8,<3",
+  "pypdf>=6.14,<7",
+  "python-multipart>=0.0.18,<1",
+  "uvicorn>=0.32,<1",
+]
+
+[project.optional-dependencies]
+primary = ["docling>=2.70,<3"]
+ocr = ["paddleocr>=3.0,<4", "paddlepaddle>=3.0,<4"]
+dev = [
+  "httpx>=0.27,<1",
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.24,<1",
+  "reportlab>=4.2,<5",
+  "ruff>=0.9,<1",
+]
+desktop-build = ["pyinstaller>=6.11,<7"]
+
+[project.scripts]
+pdfmd = "pdfmd.cli:main"
+pdfmd-server = "pdfmd.main:run"
+pdfmd-desktop-server = "pdfmd.desktop_server:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pdfmd"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"frontend/dist" = "pdfmd/web"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

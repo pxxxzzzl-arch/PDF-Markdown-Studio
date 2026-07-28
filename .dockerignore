@@ -1,0 +1,14 @@
+.git
+.venv
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+data
+output
+tmp
+frontend/node_modules
+frontend/dist
+htmlcov
+.coverage
+.DS_Store
