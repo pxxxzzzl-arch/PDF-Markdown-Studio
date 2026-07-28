@@ -34,13 +34,137 @@
 
 ## 最快开始
 
-### macOS 桌面版（推荐）
+### 本地网页版
+
+本地网页版会在电脑上启动一个仅监听 `127.0.0.1` 的服务，然后用浏览器显示完整
+操作界面。PDF 内容、任务记录和转换结果都保存在本机，不会由本程序上传到 GitHub
+或其他在线服务。使用时需要保持启动服务的终端窗口开启。
+
+#### 1. 下载源码
+
+```bash
+git clone https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio.git
+cd PDF-Markdown-Studio
+```
+
+如果已经下载过项目，直接进入项目目录即可。
+
+#### 2. 准备运行环境
+
+需要提前安装：
+
+- Python 3.11–3.13
+- Node.js 20 或更高版本
+- Git 和 Make
+
+可以先检查当前版本：
+
+```bash
+python3 --version
+node --version
+npm --version
+make --version
+```
+
+macOS 如果尚未安装 Make，可以先执行 `xcode-select --install` 安装 Xcode Command
+Line Tools。如果电脑里有多个 Python 版本，请在下面的首次安装命令中明确指定
+3.11–3.13，例如 `PYTHON=python3.12 make setup`。
+
+#### 3. 首次安装
+
+在项目根目录执行：
+
+```bash
+make setup
+```
+
+这条命令会构建网页前端、创建 `.venv` 虚拟环境，并安装 PDF 转换服务和 Docling
+主解析引擎。根据网络和电脑性能，首次安装可能需要几分钟；第一次使用 Docling
+转换时还可能下载模型文件。同一版本通常只需安装一次；更新依赖或删除 `.venv`
+后需要重新执行。
+
+#### 4. 启动并打开网页
+
+macOS 用户可以在 Finder 中双击项目根目录的 `start.command`。如果系统首次阻止
+运行，请右键该文件并选择“打开”。也可以在终端执行：
+
+```bash
+./start.command
+```
+
+脚本会完成健康检查，并自动打开：
+
+<http://127.0.0.1:8000>
+
+macOS、Linux 和 WSL 也都可以使用通用启动命令：
+
+```bash
+make run
+```
+
+使用 `make run` 时需要手动在浏览器访问 <http://127.0.0.1:8000>。请不要在转换
+过程中关闭终端；关闭 `start.command` 打开的窗口，或在 `make run` 的终端按
+`Ctrl+C`，即可停止本地服务。
+
+以后再次使用时，不需要重新执行 `make setup`，只需双击 `start.command` 或运行
+`make run`。不要直接双击 `frontend/index.html`；网页需要通过本地服务访问，
+否则转换 API 无法工作。
+
+#### 5. 在网页中转换 PDF
+
+1. 点击上传区域选择一个或多个 PDF，或者把 PDF 拖入其中；默认单批最多 20 份。
+2. 选择主解析引擎和 OCR 策略。一般保持 `Docling` 与“自动识别”即可；只处理简单
+   文本 PDF 时可以选择轻量的 `Native`。
+3. 按需展开“高级设置”，配置低质量页面兜底、图片提取、分页标记和实验性视觉
+   代码增强。
+4. 点击“开始转换”或“开始批量转换”，在右侧查看检查、解析、质量验证和结果生成
+   进度。
+5. 转换完成后可切换“预览”“源码”和“质量”页签，并下载 `.md` 或包含 Markdown、
+   结构化 JSON、质量报告和图片资源的完整结果包。
+6. 批量任务可以在“批次概览”中勾选若干结果或“全选可下载结果”，再合并下载一个
+   ZIP。
+
+左侧“最近任务”会保留本机任务历史。确认不再需要某项任务后，可以在结果区域
+删除它；对应的上传 PDF、结果和资源文件也会从本机任务目录移除。
+
+#### 6. 常见问题
+
+- **提示“首次运行需要完成安装”**：回到项目根目录执行 `make setup`。
+- **提示 Python 版本不受支持**：安装 Python 3.11–3.13，再执行
+  `PYTHON=python3.12 make setup`，其中版本号替换为实际安装的版本。
+- **使用 `start.command` 后浏览器没有自动打开**：手动访问
+  <http://127.0.0.1:8000>，并用下面的命令检查服务：
+
+  ```bash
+  curl http://127.0.0.1:8000/api/health
+  ```
+
+- **8000 端口已被占用**：换一个端口启动，然后访问对应地址：
+
+  ```bash
+  PDFMD_PORT=8001 ./start.command
+  ```
+
+  此时网页地址是 <http://127.0.0.1:8001>。
+
+- **修改前端源码后页面没有变化**：重新构建前端并重启服务：
+
+  ```bash
+  make frontend
+  ```
+
+API 调试文档位于 <http://127.0.0.1:8000/docs>。
+
+### macOS 桌面版（需获取安装包或自行构建）
 
 Apple Silicon 且系统为 macOS 14 或更高版本时：
 
 1. 解压 `dist/PDF-Markdown-Studio-0.8.0-macOS-arm64.zip`。
 2. 将 `PDF Markdown Studio.app` 拖入“应用程序”文件夹。
 3. 双击应用；后台服务会自动选择本机空闲端口，关闭应用时也会自动退出。
+
+GitHub 源码仓库不会跟踪 `dist/` 构建产物。如果仓库的 Releases 页面尚未提供
+上述 ZIP，请优先使用前面的本地网页版，或按照“构建桌面安装包”章节自行生成。
 
 完整桌面包已经包含 Python、前端、Docling 运行环境以及约 1.1 GB 的版面、表格和
 代码公式模型，不需要另外安装 Python、Node.js，也不需要在第一次转换时联网下载
@@ -50,19 +174,6 @@ Apple Silicon 且系统为 macOS 14 或更高版本时：
 当前生成的是本地测试用的 ad-hoc 签名包，适合在本机直接使用，但尚未用 Apple
 Developer ID 签名和公证。要分发给其他用户，应先完成正式签名与 notarization，
 避免触发 macOS 的“无法验证开发者”安全提示。
-
-### 源码启动
-
-在 macOS、Linux 或 WSL 中执行：
-
-```bash
-make setup
-make run
-```
-
-浏览器打开 <http://127.0.0.1:8000>。macOS 首次完成 `make setup` 后，也可以直接双击项目根目录的 `start.command`；关闭它打开的终端窗口即可停止服务。
-
-`make setup` 会依次构建前端、创建 `.venv`、安装测试工具和 Docling。首次使用 Docling 时可能下载模型文件。
 
 ## 构建桌面安装包
 
