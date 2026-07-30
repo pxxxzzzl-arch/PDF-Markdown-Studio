@@ -166,9 +166,17 @@ def test_launch_desktop_enables_downloads_and_stops_server(tmp_path: Path) -> No
     assert server is not None and server.stopped is True
 
 
-def test_webview_load_timeout_closes_blank_window(tmp_path: Path) -> None:
+def test_webview_load_timeout_closes_blank_window(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
     paths = WindowsAppPaths.from_environment({"LOCALAPPDATA": str(tmp_path)})
     paths.ensure_directories()
+    reported_errors: list[str] = []
+    monkeypatch.setattr(
+        "pdfmd.windows_app._show_native_error",
+        reported_errors.append,
+    )
     window = SimpleNamespace(
         events=SimpleNamespace(
             loaded=threading.Event(),
@@ -192,6 +200,7 @@ def test_webview_load_timeout_closes_blank_window(tmp_path: Path) -> None:
         )
 
     assert window.destroyed is True
+    assert reported_errors == ["WebView2 页面在 0.01 秒内未完成加载"]
 
 
 def test_loopback_origin_rejects_non_local_addresses() -> None:
@@ -220,6 +229,8 @@ def test_smoke_flag_converts_over_http_and_downloads_results(
     monkeypatch.setenv("HTTP_PROXY", "http://127.0.0.1:9")
     monkeypatch.delenv("NO_PROXY", raising=False)
     monkeypatch.delenv("PDFMD_DATA_DIR", raising=False)
+    monkeypatch.setattr("pdfmd.windows_app.ensure_webview2_runtime", lambda: True)
+    monkeypatch.setattr("pdfmd.windows_app._load_webview", lambda: None)
 
     result = run(
         [
@@ -259,7 +270,7 @@ def test_embedded_server_stops_after_health_check(tmp_path: Path) -> None:
 
     assert base_url.startswith("http://127.0.0.1:")
     assert thread is not None and thread.is_alive()
-    server.stop()
+    server.stop(timeout=10)
     assert not thread.is_alive()
 
 

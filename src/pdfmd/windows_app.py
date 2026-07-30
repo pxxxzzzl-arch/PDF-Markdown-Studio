@@ -844,7 +844,7 @@ def _run_smoke_mode(
         return 1
     finally:
         if server is not None:
-            server.stop()
+            server.stop(timeout=min(max(timeout, 1.0), 30.0))
         if lock is not None:
             lock.close()
     if sys.stdout is not None:
