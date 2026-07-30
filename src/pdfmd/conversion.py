@@ -230,7 +230,7 @@ class ConversionService:
         assets_dir = output_dir / "assets"
         if assets_dir.is_dir():
             artifact_files.extend(
-                str(path.relative_to(output_dir))
+                path.relative_to(output_dir).as_posix()
                 for path in sorted(assets_dir.rglob("*"))
                 if path.is_file()
             )

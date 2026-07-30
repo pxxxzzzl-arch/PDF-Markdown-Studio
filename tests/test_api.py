@@ -32,7 +32,10 @@ def test_api_serves_health_and_built_frontend(tmp_path: Path) -> None:
         assert asset_match is not None
         asset = client.get(asset_match.group(1))
         assert asset.status_code == 200
-        assert asset.headers["content-type"].startswith("text/javascript")
+        assert asset.headers["content-type"].partition(";")[0] in {
+            "application/javascript",
+            "text/javascript",
+        }
         assert "immutable" in asset.headers["cache-control"]
 
 

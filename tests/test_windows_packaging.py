@@ -182,6 +182,10 @@ def test_windows_workflow_can_publish_exact_release_assets() -> None:
     assert "runs-on: windows-2022" in workflow
     assert 'python-version: "3.12"' in workflow
     assert 'node-version: "22"' in workflow
+    assert "- name: Install web frontend dependencies" in workflow
+    assert "- name: Build web frontend" in workflow
+    assert "- name: Run Python tests" in workflow
+    assert "- name: Run Python lint" in workflow
     assert "python -m pytest -q --timeout=90" in workflow
     assert "npm --prefix frontend run build -- --mode desktop" in workflow
     assert workflow.index("npm --prefix frontend run build") < workflow.index(

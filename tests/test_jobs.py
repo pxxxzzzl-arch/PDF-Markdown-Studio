@@ -123,7 +123,7 @@ def test_safe_error_redacts_local_paths(tmp_path: Path) -> None:
     )
 
     assert str(tmp_path) not in message
-    assert "<本机路径>/jobs/secret.pdf" in message
+    assert "<本机路径>/jobs/secret.pdf" in message.replace("\\", "/")
 
 
 class _BlockingConverter:

@@ -13,6 +13,8 @@ on:
         required: false
         type: string
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
@@ -22,6 +24,10 @@ permissions:
 jobs:
   build-windows-x64:
     name: Windows 2022 / x64 / Full
+    if: >-
+      github.event_name != 'push' ||
+      startsWith(github.ref, 'refs/tags/v') ||
+      contains(github.event.head_commit.message, '[windows-release]')
     runs-on: windows-2022
     timeout-minutes: 180
 
@@ -65,6 +71,7 @@ jobs:
           }
           if (
             "${{ github.event_name }}" -eq "push" -and
+            "${{ github.ref }}" -like "refs/tags/*" -and
             "${{ github.ref_name }}" -ne "v$version"
           ) {
             throw "Tag ${{ github.ref_name }} does not match project version v$version."
@@ -72,21 +79,25 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
           "release_tag=$releaseTag" >> $env:GITHUB_OUTPUT
 
+      - name: Install web frontend dependencies
+        shell: pwsh
+        run: npm --prefix frontend ci
+
       - name: Build web frontend
         shell: pwsh
-        run: |
-          npm --prefix frontend ci
-          npm --prefix frontend run build -- --mode desktop
+        run: npm --prefix frontend run build -- --mode desktop
 
       - name: Install test dependencies
         shell: pwsh
         run: python -m pip install -e ".[dev]"
 
-      - name: Run Python tests and lint
+      - name: Run Python tests
         shell: pwsh
-        run: |
-          python -m pytest -q --timeout=90
-          python -m ruff check src tests scripts
+        run: python -m pytest -q --timeout=90
+
+      - name: Run Python lint
+        shell: pwsh
+        run: python -m ruff check src tests scripts
 
       - name: Install Inno Setup
         shell: pwsh
@@ -131,6 +142,8 @@ jobs:
       - name: Create or update GitHub Release
         if: >-
           startsWith(github.ref, 'refs/tags/v') ||
+          (github.event_name == 'push' &&
+            contains(github.event.head_commit.message, '[windows-release]')) ||
           (github.event_name == 'workflow_dispatch' && inputs.create_release)
         shell: pwsh
         env:
