@@ -23,7 +23,7 @@ def test_api_serves_health_and_built_frontend(tmp_path: Path) -> None:
 
         assert health.status_code == 200
         assert health.json()["status"] == "ok"
-        assert health.json()["version"] == "0.8.0"
+        assert health.json()["version"] == "0.9.0"
         assert index.status_code == 200
         assert "PDF Markdown Studio" in index.text
         assert index.headers["cache-control"] == "no-store"

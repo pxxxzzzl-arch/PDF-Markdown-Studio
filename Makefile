@@ -1,4 +1,4 @@
-.PHONY: setup install install-primary install-ocr frontend test lint run dev macos-app clean
+.PHONY: setup install install-primary install-ocr frontend test lint run dev macos-app windows-app clean
 
 PYTHON ?= python3
 
@@ -32,6 +32,9 @@ dev:
 
 macos-app:
 	./scripts/build_macos_app.sh
+
+windows-app:
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_windows_app.ps1
 
 clean:
 	find src tests -type d -name __pycache__ -prune -exec rm -r {} +

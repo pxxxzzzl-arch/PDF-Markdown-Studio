@@ -169,7 +169,8 @@ class JobManager:
             thread_name_prefix="pdfmd-worker",
         )
         self._futures: dict[str, Future[None]] = {}
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
+        self._shutdown_started = False
 
     def submit(
         self,
@@ -178,20 +179,26 @@ class JobManager:
         output_dir: Path,
         runtime_options: ConversionOptions,
     ) -> None:
-        future = self.executor.submit(
-            self._run,
-            record.id,
-            record.filename,
-            input_path,
-            output_dir,
-            runtime_options,
-        )
         with self._lock:
+            if self._shutdown_started:
+                raise RuntimeError("job manager is shutting down")
+            future = self.executor.submit(
+                self._run,
+                record.id,
+                record.filename,
+                input_path,
+                output_dir,
+                runtime_options,
+            )
             self._futures[record.id] = future
-        future.add_done_callback(lambda _: self._forget(record.id))
+            future.add_done_callback(
+                lambda completed, job_id=record.id: self._finish(job_id, completed)
+            )
 
-    def shutdown(self) -> None:
-        self.executor.shutdown(wait=False, cancel_futures=True)
+    def shutdown(self, *, wait: bool = True) -> None:
+        with self._lock:
+            self._shutdown_started = True
+        self.executor.shutdown(wait=wait, cancel_futures=True)
 
     def _run(
         self,
@@ -228,14 +235,43 @@ class JobManager:
                 job_id,
                 status=JobStatus.FAILED,
                 stage="转换失败",
-                error=_safe_error(exc),
+                error=_safe_error(
+                    exc,
+                    sensitive_paths=(
+                        self.settings.data_dir,
+                        self.settings.data_dir.parent,
+                        Path.home(),
+                    ),
+                ),
             )
 
-    def _forget(self, job_id: str) -> None:
+    def _finish(self, job_id: str, future: Future[None]) -> None:
+        if future.cancelled():
+            try:
+                self.store.update(
+                    job_id,
+                    status=JobStatus.FAILED,
+                    stage="应用关闭，排队任务已取消",
+                    error="任务在开始转换前被取消，请重新提交",
+                )
+            except JobNotFoundError:
+                pass
         with self._lock:
             self._futures.pop(job_id, None)
 
 
-def _safe_error(exc: Exception) -> str:
+def _safe_error(
+    exc: Exception,
+    *,
+    sensitive_paths: tuple[Path, ...] = (),
+) -> str:
     message = str(exc).strip() or exc.__class__.__name__
+    for path in sensitive_paths:
+        try:
+            value = str(path.expanduser().resolve())
+        except OSError:
+            value = str(path.expanduser())
+        for variant in {value, value.replace("\\", "/"), value.replace("/", "\\")}:
+            if variant:
+                message = message.replace(variant, "<本机路径>")
     return message[:1000]

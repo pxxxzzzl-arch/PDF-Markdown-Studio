@@ -43,8 +43,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        yield
-        manager.shutdown()
+        try:
+            yield
+        finally:
+            manager.shutdown(wait=True)
 
     app = FastAPI(
         title="PDF Markdown Studio",

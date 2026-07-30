@@ -14,18 +14,21 @@ macOS 原生应用壳，并用结构化文档模型与质量门控减少静默�
 - Python lint：`.venv/bin/ruff check src tests scripts`
 - 桌面前端构建：`npm --prefix frontend run build -- --mode desktop`
 - macOS 发行包：`make macos-app`
+- Windows 发行包（在 Windows PowerShell 中）：`make windows-app`
 
 ## 技术栈
 
 - Python 3.11–3.13、FastAPI、Pydantic、pypdf、Docling；PaddleOCR 为可选依赖
 - React 19、TypeScript、Vite
-- macOS AppKit/WebKit Objective-C 壳，内置 PyInstaller 服务
+- macOS AppKit/WebKit Objective-C 壳；Windows 使用 pywebview/WebView2
+- 桌面发行包使用 PyInstaller onedir；Windows 安装器使用 Inno Setup
 
 ## 目录与约定
 
 - `src/pdfmd/`：转换、质量门控、API、CLI 与任务状态的权威实现
 - `frontend/src/`：共享 Web/桌面界面；`frontend/dist/` 会同时进入 wheel 和 `.app`
 - `desktop/macos/`、`scripts/build_macos_app.sh`：原生窗口和发行链
+- `desktop/windows/`、`scripts/build_windows_app.ps1`：Windows 安装器和发行链
 - `tests/`：现有行为合同；变更后至少运行测试、lint 和桌面模式前端构建
 - 前端源码变化不会自动进入既有 `.app`；发行前必须重建并核对 wheel、应用与 ZIP
 - 保留原生 `<input type="file" multiple>` 和链接导航下载，macOS 文件/保存面板依赖它们
@@ -37,8 +40,9 @@ macOS 原生应用壳，并用结构化文档模型与质量门控减少静默�
 
 ## 当前状态与下一步
 
-- 当前版本为 0.8.0；界面支持单文件/批量转换、批量选择下载和任务历史
+- 当前版本为 0.9.0；界面支持单文件/批量转换、批量选择下载和任务历史
 - macOS 默认窗口为 1180×780，最小 960×680；完整包包含离线 Docling 模型
+- Windows 10/11 x64 使用 pywebview + Edge WebView2，提供安装器与便携 ZIP
 - 当前发行物仅为 ad-hoc 签名，尚未 Developer ID 签名或公证
-- Git 尚无首个提交；任何清理前先建立可恢复基线
-- 下一步优先完成正式签名/公证，并补上传队列、批量下载和结果页签的前端组件测试
+- Git 已建立可恢复提交基线并连接 GitHub 远端
+- 下一步优先完成 Windows Authenticode 与 macOS Developer ID 签名，并补前端组件测试

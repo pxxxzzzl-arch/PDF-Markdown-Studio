@@ -90,7 +90,7 @@ def test_cli_engine_status_and_version(capsys) -> None:
     with pytest.raises(SystemExit) as exc_info:
         main(["--version"])
     assert exc_info.value.code == 0
-    assert "0.8.0" in capsys.readouterr().out
+    assert "0.9.0" in capsys.readouterr().out
 
 
 def test_cli_rejects_out_of_range_quality_score(sample_pdf: Path) -> None:

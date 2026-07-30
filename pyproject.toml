@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pdf-markdown-studio"
-version = "0.8.0"
+version = "0.9.0"
 description = "Local-first PDF to Markdown converter with pluggable parsing engines and quality gates"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
@@ -28,12 +28,19 @@ dev = [
   "reportlab>=4.2,<5",
   "ruff>=0.9,<1",
 ]
-desktop-build = ["pyinstaller>=6.11,<7"]
+desktop-build = [
+  "pillow>=11,<13",
+  "pyinstaller>=6.16,<7",
+]
+windows-desktop = [
+  "pywebview>=6.2,<7; sys_platform == 'win32'",
+]
 
 [project.scripts]
 pdfmd = "pdfmd.cli:main"
 pdfmd-server = "pdfmd.main:run"
 pdfmd-desktop-server = "pdfmd.desktop_server:run"
+pdfmd-windows-app = "pdfmd.windows_app:run"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pdfmd"]

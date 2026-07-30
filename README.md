@@ -1,456 +1,149 @@
-# PDF Markdown Studio 0.8.0
+# PDF Markdown Studio 0.9.0
 
-一个本地优先、带质量门控的 PDF 转 Markdown 工具。它不会把“进程未报错”等同于“转换正确”：每次转换同时产出 Markdown、统一结构 JSON、逐页质量报告和资源文件，并可对低质量页面切换解析引擎重新处理。
+把 PDF 拖进本地软件，转换为结构清晰的 Markdown。文件、任务记录和转换结果默认只保存在你的电脑上。
 
-## 当前能力
+## 下载与安装
 
-- 原生文本、扫描件和混合 PDF 分类
-- 文件头、大小、页数、加密和损坏文件检查
-- Docling 主解析、可选的 PaddleOCR/PP-StructureV3 OCR 兜底
-- 无 AI 依赖时使用 pypdf 的轻量 Native 引擎
-- 标题、段落、列表、表格、公式、代码和图片的统一结构模型
-- 原生 PDF 代码版面恢复：支持稳定行号栏和高置信度无行号代码，保留缩进、空行与跨页连续性，并拆开误并入代码的对齐表格
-- 嵌入截图代码离线恢复：用包内 RapidOCR 模型按坐标重建行号、空行和缩进
-- Docling 视觉代码增强作为实验选项提供；默认关闭，避免混合中英文课件出现二次 OCR 退化
-- 对 Docling、Native、截图 OCR、跨页代码和 Raw Markdown 围栏统一执行 Python/JSON 语法检查
-- 代码质量指标单独展示逻辑代码组、已验证代码、异常代码、未标注语言和有效率
-- 根据编号深度恢复语义标题层级，规范列表、题注与中文换行空格
-- 无编号视觉续行自动拼回原代码行，避免长代码被 PDF 换行破坏语义
-- GFM 表格会校验转义、行列数与结构元数据；不可靠时自动使用 HTML table
-- 非空页空输出、文本覆盖率、乱码、重复文本、代码语法、围栏闭合、代码塌缩、标题扁平化、表格结构和资源异常检测
-- 总分综合页面均分与最低 10% 页面均分，避免长文档中单页严重损坏被平均值掩盖
-- 按页比较主引擎和兜底引擎结果，保留质量较高版本
-- 同一 React 界面同时服务浏览器和 macOS 原生窗口；桌面版采用固定工具栏、任务侧栏、设置/结果分栏和分区内滚动
-- 异步进度轮询和持久化任务历史；应用重启会中止未完成任务，需要重新提交
-- Markdown 安全预览和失败不跳页的结果下载
-- 单文件与批量转换共用一个文件队列；每批最多 20 份、限流上传、独立失败与总体进度监控
-- 批量结果可逐项勾选或全选，由本机合并为一个 ZIP 下载，任务目录和清单彼此隔离
-- 历史任务请求隔离、批量提交失败项单独重试、转换失败不影响其他任务
-- 降级状态提示和键盘/减弱动画支持
-- 任务结果可二次确认后从本机删除；API 不返回任何本机绝对路径
-- 主引擎瞬态中断自动重试一次；仍失败时降级到 Native 并明确标记“未通过”，不再用高分掩盖降级
-- 前端不加载外部字体，Markdown 中的外部图片也不会自动联网请求
-- CLI、REST API、SQLite 任务记录和 Docker 部署入口
+| 系统 | 推荐下载 | 启动方式 |
+| --- | --- | --- |
+| **Windows 10/11 x64** | [打开最新 Release](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/releases/latest) | 安装版或免安装便携版，支持 Windows 10 1809+ |
+| macOS 14+ Apple Silicon | 当前尚无 Release 安装包 | 使用[本地网页版](#从源码运行本地网页版)，或[自行构建](docs/building.md#macos) |
+| Linux / 其他系统 | [下载源码](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/archive/refs/heads/main.zip) | 运行本地网页版 |
 
-## 最快开始
+只想在浏览器里使用？直接看[本地网页版启动说明](#从源码运行本地网页版)。网页和转换服务都运行在你的电脑上，不需要部署服务器或注册账号。
 
-### 本地网页版
+### Windows 10/11 x64
 
-本地网页版会在电脑上启动一个仅监听 `127.0.0.1` 的服务，然后用浏览器显示完整
-操作界面。PDF 内容、任务记录和转换结果都保存在本机，不会由本程序上传到 GitHub
-或其他在线服务。使用时需要保持启动服务的终端窗口开启。
+在 [Releases](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/releases/latest) 页面选择一种：
 
-#### 1. 下载源码
+- **安装版（推荐）**：下载 `PDF-Markdown-Studio-0.9.0-Windows-x64-Setup.exe`，双击后按向导安装。
+- **便携版**：下载 `PDF-Markdown-Studio-0.9.0-Windows-x64-Portable.zip`，完整解压后双击 `PDF Markdown Studio.exe`，无需安装。
+
+两种包都内含应用所需的 Python 服务、Docling 运行时和网页界面，不需要另外安装 Python、Node.js 或 Git。首次使用 Docling 时仍需联网下载模型；退出桌面窗口后，本地服务也会随之关闭。
+便携版不会注册卸载项；更新时建议解压到新目录，不要覆盖正在运行的旧版本。
+
+> 当前 Windows 包尚未进行商业代码签名，SmartScreen 可能显示“未知发布者”。请只从本项目 Releases 下载，并在核对来源后选择“更多信息 → 仍要运行”。如果 Release 页面尚未出现上述文件，说明 0.9.0 安装包仍在发布中，请先使用源码版。
+
+### macOS
+
+当前 GitHub Releases 尚未提供 macOS 安装包。Apple Silicon Mac 可以先使用下方本地网页版；开发者也可运行 `make macos-app` 自行构建 ad-hoc 签名的 `.app`。详细要求见[构建与发布](docs/building.md#macos)。
+
+## 4 步完成转换
+
+1. 打开软件，把一个或多个 PDF 拖入上传区域。
+2. 一般保持 `Docling` 和“自动识别”；简单文本 PDF 可选择更轻量的 `Native`。
+3. 点击“开始转换”或“开始批量转换”，等待质量检查完成。
+4. 查看“预览 / 源码 / 质量”，下载 `.md`、完整结果包，或勾选多个任务批量下载 ZIP。
+
+最近任务保存在本机。删除任务前软件会再次确认；确认后，对应的上传文件、结果和资源也会从本机任务目录移除。
+
+## 核心能力
+
+- **本地优先**：Web 与桌面服务只监听回环地址，预览不会主动请求外部图片。
+- **多类型 PDF**：识别原生文本、扫描件和混合文档，支持 Docling、Native 与可选 OCR 兜底。
+- **结构恢复**：处理标题、段落、列表、表格、公式、图片，以及带缩进和跨页连续性的代码。
+- **质量门控**：检查空页、覆盖率、乱码、重复、代码语法、表格结构和资源完整性，并按页选择更好的解析结果。
+- **批量工作流**：单批最多 20 份 PDF，独立显示成功与失败，可全选或按需合并下载。
+- **完整产物**：同时生成 Markdown、统一结构 JSON、逐页质量报告、清单和图片资源。
+
+## 从源码运行本地网页版
+
+本地网页版不是在线网站：它会在电脑上启动服务，再由浏览器访问
+`http://127.0.0.1:8000`。PDF 和转换结果不会由本程序上传到 GitHub；使用期间需要保持
+启动服务的终端窗口开启。
+
+### macOS、Linux 或 WSL
+
+首次使用需要 Python 3.11–3.13、Node.js 20+、Git 和 Make：
 
 ```bash
 git clone https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio.git
 cd PDF-Markdown-Studio
-```
-
-如果已经下载过项目，直接进入项目目录即可。
-
-#### 2. 准备运行环境
-
-需要提前安装：
-
-- Python 3.11–3.13
-- Node.js 20 或更高版本
-- Git 和 Make
-
-可以先检查当前版本：
-
-```bash
-python3 --version
-node --version
-npm --version
-make --version
-```
-
-macOS 如果尚未安装 Make，可以先执行 `xcode-select --install` 安装 Xcode Command
-Line Tools。如果电脑里有多个 Python 版本，请在下面的首次安装命令中明确指定
-3.11–3.13，例如 `PYTHON=python3.12 make setup`。
-
-#### 3. 首次安装
-
-在项目根目录执行：
-
-```bash
 make setup
-```
-
-这条命令会构建网页前端、创建 `.venv` 虚拟环境，并安装 PDF 转换服务和 Docling
-主解析引擎。根据网络和电脑性能，首次安装可能需要几分钟；第一次使用 Docling
-转换时还可能下载模型文件。同一版本通常只需安装一次；更新依赖或删除 `.venv`
-后需要重新执行。
-
-#### 4. 启动并打开网页
-
-macOS 用户可以在 Finder 中双击项目根目录的 `start.command`。如果系统首次阻止
-运行，请右键该文件并选择“打开”。也可以在终端执行：
-
-```bash
-./start.command
-```
-
-脚本会完成健康检查，并自动打开：
-
-<http://127.0.0.1:8000>
-
-macOS、Linux 和 WSL 也都可以使用通用启动命令：
-
-```bash
 make run
 ```
 
-使用 `make run` 时需要手动在浏览器访问 <http://127.0.0.1:8000>。请不要在转换
-过程中关闭终端；关闭 `start.command` 打开的窗口，或在 `make run` 的终端按
-`Ctrl+C`，即可停止本地服务。
+浏览器访问 <http://127.0.0.1:8000>。首次安装只需执行一次 `make setup`；以后进入项目目录运行 `make run` 即可。macOS 用户也可以直接双击根目录的 `start.command`，它会启动服务并自动打开浏览器。
 
-以后再次使用时，不需要重新执行 `make setup`，只需双击 `start.command` 或运行
-`make run`。不要直接双击 `frontend/index.html`；网页需要通过本地服务访问，
-否则转换 API 无法工作。
+### Windows PowerShell 源码版
 
-#### 5. 在网页中转换 PDF
+普通 Windows 用户推荐直接下载前面的安装版或便携版。需要从源码运行网页时，请先安装
+Python 3.11–3.13、Node.js 20+ 和 Git，然后在 PowerShell 中执行：
 
-1. 点击上传区域选择一个或多个 PDF，或者把 PDF 拖入其中；默认单批最多 20 份。
-2. 选择主解析引擎和 OCR 策略。一般保持 `Docling` 与“自动识别”即可；只处理简单
-   文本 PDF 时可以选择轻量的 `Native`。
-3. 按需展开“高级设置”，配置低质量页面兜底、图片提取、分页标记和实验性视觉
-   代码增强。
-4. 点击“开始转换”或“开始批量转换”，在右侧查看检查、解析、质量验证和结果生成
-   进度。
-5. 转换完成后可切换“预览”“源码”和“质量”页签，并下载 `.md` 或包含 Markdown、
-   结构化 JSON、质量报告和图片资源的完整结果包。
-6. 批量任务可以在“批次概览”中勾选若干结果或“全选可下载结果”，再合并下载一个
-   ZIP。
+```powershell
+git clone https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio.git
+cd PDF-Markdown-Studio
+npm --prefix frontend ci
+npm --prefix frontend run build
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -e ".[primary]"
+.\.venv\Scripts\pdfmd-server.exe --host 127.0.0.1 --port 8000
+```
 
-左侧“最近任务”会保留本机任务历史。确认不再需要某项任务后，可以在结果区域
-删除它；对应的上传 PDF、结果和资源文件也会从本机任务目录移除。
+如果电脑没有 `py` 命令，可把 `py -3.12` 换成指向受支持版本的 `python`。安装完成后，
+以后只需进入项目目录并运行最后一条 `pdfmd-server.exe` 命令。
 
-#### 6. 常见问题
+启动成功后访问 <http://127.0.0.1:8000>；按 `Ctrl+C` 停止服务。若页面打不开，可先访问
+<http://127.0.0.1:8000/api/health> 检查服务状态，或按照[故障排查](docs/troubleshooting.md#本地网页版)处理。
 
-- **提示“首次运行需要完成安装”**：回到项目根目录执行 `make setup`。
-- **提示 Python 版本不受支持**：安装 Python 3.11–3.13，再执行
-  `PYTHON=python3.12 make setup`，其中版本号替换为实际安装的版本。
-- **使用 `start.command` 后浏览器没有自动打开**：手动访问
-  <http://127.0.0.1:8000>，并用下面的命令检查服务：
+不要直接双击 `frontend/index.html`，它必须通过本地服务访问转换 API。Windows 原生开发环境、前后端分离调试、CLI、Docker、REST API 和配置项见[开发指南](docs/development.md)。
 
-  ```bash
-  curl http://127.0.0.1:8000/api/health
-  ```
+## 输出内容
 
-- **8000 端口已被占用**：换一个端口启动，然后访问对应地址：
+完整结果包包含：
 
-  ```bash
-  PDFMD_PORT=8001 ./start.command
-  ```
+```text
+document.md
+document.json
+quality-report.json
+manifest.json
+assets/
+```
 
-  此时网页地址是 <http://127.0.0.1:8001>。
+普通表格优先输出 GFM；复杂合并表格会使用 HTML table。图片使用相对路径。质量检查未通过时仍会保留结果，并明确提示需要人工复核。
 
-- **修改前端源码后页面没有变化**：重新构建前端并重启服务：
+## 构建与测试
 
-  ```bash
-  make frontend
-  ```
+桌面包必须在目标系统上构建：
 
-API 调试文档位于 <http://127.0.0.1:8000/docs>。
-
-### macOS 桌面版（需获取安装包或自行构建）
-
-Apple Silicon 且系统为 macOS 14 或更高版本时：
-
-1. 解压 `dist/PDF-Markdown-Studio-0.8.0-macOS-arm64.zip`。
-2. 将 `PDF Markdown Studio.app` 拖入“应用程序”文件夹。
-3. 双击应用；后台服务会自动选择本机空闲端口，关闭应用时也会自动退出。
-
-GitHub 源码仓库不会跟踪 `dist/` 构建产物。如果仓库的 Releases 页面尚未提供
-上述 ZIP，请优先使用前面的本地网页版，或按照“构建桌面安装包”章节自行生成。
-
-完整桌面包已经包含 Python、前端、Docling 运行环境以及约 1.1 GB 的版面、表格和
-代码公式模型，不需要另外安装 Python、Node.js，也不需要在第一次转换时联网下载
-模型。应用本体解压后约 2 GB；任务、上传文件和转换结果位于
-`~/Library/Application Support/PDF Markdown Studio`。
-
-当前生成的是本地测试用的 ad-hoc 签名包，适合在本机直接使用，但尚未用 Apple
-Developer ID 签名和公证。要分发给其他用户，应先完成正式签名与 notarization，
-避免触发 macOS 的“无法验证开发者”安全提示。
-
-## 构建桌面安装包
-
-在 Apple Silicon Mac 上准备好 Python 3.11–3.13、Node.js 20+ 和 Xcode Command
-Line Tools 后执行：
+```powershell
+# Windows 10/11 x64
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_windows_app.ps1
+```
 
 ```bash
+# Apple Silicon macOS
 make macos-app
 ```
 
-产物会写入 `dist/`。默认构建完整版本；只需要 Native 轻量解析时可以执行：
+提交前至少运行：
 
 ```bash
-PDFMD_DESKTOP_EDITION=lite make macos-app
+.venv/bin/python -m pytest -q
+.venv/bin/ruff check src tests scripts
+npm --prefix frontend run build -- --mode desktop
 ```
 
-轻量版体积更小，但不包含 Docling，复杂版式、表格和扫描件的转换质量会明显低于完整版本。
+Windows PowerShell 对应命令、安装器与便携包制作、模型封装、签名和 Release 检查清单见[构建与发布](docs/building.md)。常见启动或转换问题见[故障排查](docs/troubleshooting.md)。
 
-完整版本默认把当前构建环境中的 Docling 模型缓存一并封装，并在运行时强制离线
-读取。构建前应至少成功执行过一次启用 Docling 的转换。缓存不在默认位置时可通过
-`PDFMD_MODEL_CACHE_SOURCE` 指定 Hugging Face 根目录；只想生成允许首次联网下载
-模型的较小安装包时，可执行：
+## 已知限制
 
-```bash
-PDFMD_BUNDLE_MODELS=0 make macos-app
-```
+- PDF 是固定版面格式，缺少语义标记时无法保证原始阅读顺序完全正确。
+- 手写体、嵌套或跨页表格、低分辨率扫描件仍可能需要人工校对。
+- `Native` 是无需大型模型的降级引擎，不替代版面分析或 OCR。
+- 当前任务队列面向本地单机；多用户部署应使用隔离的转换进程队列。
+- Windows 包尚未进行商业代码签名；macOS 自行构建包仅为 ad-hoc 签名且未公证。
 
-需要反复离线重建时，可先在当前虚拟环境安装打包工具，然后复用这套已经测试过的依赖：
+## 开源许可与致谢
 
-```bash
-.venv/bin/python -m pip install -e '.[desktop-build]'
-PDFMD_DESKTOP_REUSE_SOURCE_ENV=1 make macos-app
-```
+项目源码采用 [MIT License](LICENSE)。
 
-## 设计
+核心解析依赖与设计参考包括 [Docling](https://github.com/docling-project/docling)、[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)、[pypdf](https://github.com/py-pdf/pypdf)、[MinerU](https://github.com/opendatalab/MinerU)、[Marker](https://github.com/datalab-to/marker) 和 [PyMuPDF4LLM](https://github.com/pymupdf/pymupdf4llm)。第三方代码与模型适用各自许可证；发布或商用前请核对实际打包内容。
+桌面发行包包含的主要组件及许可证摘要见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-```text
-PDF
- └─ 安全检查与页面分类
-     └─ Parser Adapter（Docling / PaddleOCR / Native）
-         └─ ParsedDocument 统一 JSON
-             ├─ Quality Gate → 低质量页重新解析
-             └─ Markdown Renderer
-                 ├─ document.md
-                 ├─ document.json
-                 ├─ quality-report.json
-                 ├─ manifest.json
-                 └─ assets/
-```
+## 更多文档
 
-最终 Markdown 不直接依赖任何上游引擎的内部对象。更换或升级引擎时，只需更新对应适配器和回归样本。
-
-## 环境要求
-
-- Python 3.11–3.13
-- Node.js 20 或更高版本（仅构建前端需要）
-- 推荐 8 GB 以上内存；大型 AI 模型建议 16 GB
-- Docling 和 PaddleOCR 首次运行可能下载模型
-
-## 本地安装
-
-不使用 Make 时，先构建将随安装包分发的前端：
-
-```bash
-cd frontend
-npm ci
-npm run build
-cd ..
-```
-
-再创建虚拟环境并安装主引擎：
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[primary,dev]'
-```
-
-如需中文扫描件兜底，再安装 PaddleOCR。该依赖体积较大，建议在确认设备环境后单独安装：
-
-```bash
-python -m pip install -e '.[ocr]'
-```
-
-启动本地应用：
-
-```bash
-source .venv/bin/activate
-pdfmd-server --host 127.0.0.1 --port 8000
-```
-
-浏览器打开 <http://127.0.0.1:8000>。API 文档位于 <http://127.0.0.1:8000/docs>。
-
-开发时也可以分别启动后端和 Vite：
-
-```bash
-source .venv/bin/activate
-uvicorn pdfmd.main:app --reload --port 8000
-```
-
-```bash
-cd frontend
-npm run dev
-```
-
-### Docker
-
-容器入口仅绑定本机 `127.0.0.1:8000`，任务数据保存在 Docker volume：
-
-```bash
-docker compose up --build
-```
-
-## CLI
-
-```bash
-pdfmd input.pdf -o output/result
-```
-
-常用选项：
-
-```text
---engine docling|native|paddleocr
---fallback-engine paddleocr|native
---ocr auto|always|never
---code-enrichment  # 实验性视觉代码增强；默认关闭
---password PDF_PASSWORD
---no-images
---page-markers
---no-page-markers  # 兼容旧版；不输出分页注释现为默认行为
---no-quality-fallback
---minimum-quality-score 0-100
---engine-status
---debug
-```
-
-示例：
-
-```bash
-pdfmd contract.pdf -o output/contract --engine docling --ocr auto
-```
-
-CLI 在质量检查未通过时仍会保留全部结果，但返回退出码 `2`，便于批处理系统阻止低质量文档静默进入下游。
-
-## REST API
-
-提交文件：
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/jobs \
-  -F 'file=@document.pdf' \
-  -F 'options_json={"primary_engine":"docling","ocr_mode":"auto"}'
-```
-
-查询任务和下载结果：
-
-```bash
-curl http://127.0.0.1:8000/api/jobs/JOB_ID
-curl -O http://127.0.0.1:8000/api/jobs/JOB_ID/archive
-curl -X POST http://127.0.0.1:8000/api/jobs/archive \
-  -H 'Content-Type: application/json' \
-  -d '{"job_ids":["JOB_ID_1","JOB_ID_2"]}' \
-  -o pdf-markdown-batch-2.zip
-curl -X DELETE http://127.0.0.1:8000/api/jobs/JOB_ID
-```
-
-运行中的任务不能删除。完成或失败的任务删除后，其上传 PDF、结果、图片和 ZIP 会一起从本机移除。
-
-## 输出说明
-
-```text
-output/
-├── document.md            # 最终 Markdown
-├── document.json          # 带页码、类型、坐标和来源引擎的统一结构
-├── quality-report.json    # 总分、逐页分数、问题和兜底记录
-├── manifest.json          # 文件摘要、引擎和产物清单
-└── assets/                # 有图片时生成，保存提取资源
-```
-
-复杂合并单元格以及未通过 GFM 行列/转义校验的表格使用 HTML table，验证通过的普通表格保留为 GFM。这遵循 Docling 的建议：Markdown 无法完整表达跨行、跨列表格时使用 HTML 或结构化 JSON。图片始终使用相对路径。清洁输出默认不含分页注释；需要页级定位时可启用 `--page-markers`，以 `<!-- page: N -->` 写入且不影响 Markdown 阅读器渲染。
-
-### 代码质量门控
-
-- 先按 `continues_previous` 合并逻辑代码，再渲染 Markdown；分页注释放在围栏外，不会切断代码。
-- 语言判断综合 Docling 来源、完整跨页文本和保守语法信号，续页开头的局部字典不会再把整段 Python 误判为 JSON。
-- Python 使用 `ast.parse`，JSON 使用标准解析器；检查覆盖结构化代码块和 Raw Markdown 围栏。
-- `AIMessage(...)` 等 SDK 返回对象被识别为输出展示，不冒充可执行源代码；截图 OCR 仍保留人工复核提示。
-- Docling 置信度、页面均分、最低 10% 页面均分和代码有效率同时写入质量报告。置信度高不等于代码字符一定正确。
-- 只有具有括号上下文和相邻语句证据时才修复 OCR 的闭合符号，避免把合法的 `c`/`C` 变量误删。
-
-## 配置
-
-环境变量：
-
-| 变量 | 默认值 | 说明 |
-| --- | ---: | --- |
-| `PDFMD_HOST` | `127.0.0.1` | 本地服务监听地址 |
-| `PDFMD_PORT` | `8000` | 本地服务监听端口 |
-| `PDFMD_DATA_DIR` | `./data` | SQLite、上传文件和任务结果目录 |
-| `PDFMD_MAX_FILE_SIZE` | `209715200` | 最大上传字节数（200 MB） |
-| `PDFMD_MAX_PAGES` | `500` | 单文件最大页数 |
-| `PDFMD_MAX_BATCH_FILES` | `20` | Web 界面单批最大文件数（最大可设为 100） |
-| `PDFMD_MAX_WORKERS` | `1` | 同时运行的转换任务数 |
-| `PDFMD_JOB_TTL_HOURS` | `72` | 预留的任务保留时间配置 |
-
-生产环境建议保持单 worker 起步；模型加载会占用较多内存。需要扩容时，优先增加独立转换进程，而不是在同一进程中无限增加线程。
-
-如果双击 `start.command` 后页面没有打开，先在终端确认健康接口：
-
-```bash
-curl http://127.0.0.1:8000/api/health
-```
-
-返回 `{"status":"ok", ...}` 说明服务正常，可以手动访问 <http://127.0.0.1:8000>。如果 8000 端口被其他程序占用，启动脚本会显示占用进程；也可以换一个端口启动：
-
-```bash
-PDFMD_PORT=8001 ./start.command
-```
-
-## 测试
-
-```bash
-source .venv/bin/activate
-python -m pytest -q
-ruff check src tests scripts
-cd frontend && npm run build
-```
-
-自动化套件动态生成带文本、表格、图片、分页、中文和加密场景的 PDF，覆盖：
-
-- PDF 类型与安全限制
-- 统一模型、语义标题/列表规范化与 Markdown 渲染
-- 带行号代码的缩进、空行、碎片合并、跨页连续性和截图坐标 OCR 恢复
-- 空输出、文本覆盖、Python/JSON 语法、跨页代码、围栏闭合、代码塌缩、行号污染、标题扁平化、表格和图片等质量规则
-- Native 端到端转换
-- SQLite 不保存 PDF 密码
-- 上传大小限制、非法引擎、文件名净化和资源路径穿越防护
-- 上传、轮询、质量报告、白名单 ZIP 下载、DELETE CORS 和任务删除 API
-- 连续多文件排队、任务 ID/输出目录隔离和本地同源批量提交
-- 输出目录复用、OCR 临时文件失败清理和本地启动脚本兼容性
-- CLI 成功/失败退出码、无堆栈错误信息和版本输出
-- 主引擎不可用、瞬态重试、诚实降级、按页兜底采用和拒绝等质量路径
-
-另有两个真实 Docling 集成样本：
-
-```bash
-python scripts/generate_sample_pdf.py tmp/pdfs/visual-regression.pdf
-python scripts/generate_scanned_sample_pdf.py tmp/pdfs/scanned-regression.pdf
-pdfmd tmp/pdfs/visual-regression.pdf -o output/docling --engine docling
-pdfmd tmp/pdfs/scanned-regression.pdf -o output/scanned-docling --engine docling --ocr auto
-```
-
-扫描样本只有整页图片、没有 PDF 文本层，用于确认 OCR、中文、表格、阅读顺序和页面末尾均不会静默丢失。
-
-构建可分发 wheel 前必须先执行前端构建。Hatch 会把 `frontend/dist` 收进 `pdfmd/web`，安装后的 `pdfmd-server` 因而包含完整界面：
-
-```bash
-python -m pip wheel --no-deps --wheel-dir dist .
-```
-
-在升级 Docling、PaddleOCR 或 pypdf 前，应先把实际失败文件匿名化后加入回归集，再运行全量测试。公开基准可参考 [OmniDocBench](https://github.com/opendatalab/OmniDocBench)，但真实业务样本仍是最终验收依据。
-
-## 引擎与许可证
-
-- [Docling](https://github.com/docling-project/docling)：代码 MIT；模型许可证需分别核对。
-- [Marker](https://github.com/datalab-to/marker)：可参考其独立 CodeProcessor/TextProcessor 后处理架构。
-- [MinerU](https://github.com/opendatalab/MinerU)：可参考其段落拆分和按内容类型生成 Markdown 的分层流程。
-- [PyMuPDF4LLM](https://github.com/pymupdf/pymupdf4llm)：可参考其面向 LLM 的版面顺序与 Markdown 输出设计。
-- [Docling 表格序列化说明](https://docling-project.github.io/docling/concepts/serialization/)：复杂表格优先 HTML/JSON。
-- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)：Apache-2.0。
-- [pypdf](https://github.com/py-pdf/pypdf)：BSD-3-Clause。
-
-源码和 wheel 不直接捆绑第三方大型模型权重；完整 macOS 桌面包会按构建脚本复制指定版本的 Docling 离线模型，并收录 RapidOCR 随包模型。发布闭源或收费产品前，仍应对实际打包的代码、模型和字体进行一次许可证清单审计。
-
-## 已知边界
-
-- PDF 是固定版面格式，未标记 PDF 可能没有可靠的语义层和阅读顺序。
-- 手写体、嵌套表格、跨页合并表格和低分辨率扫描件仍可能需要人工校对。
-- Native 引擎用于降级运行，不替代版面分析或 OCR。
-- 当前任务队列适合本地单机；多用户服务应将模型推理迁移到隔离的进程队列。
+- [开发指南](docs/development.md)
+- [构建与发布](docs/building.md)
+- [故障排查](docs/troubleshooting.md)

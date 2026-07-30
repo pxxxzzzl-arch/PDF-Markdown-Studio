@@ -17,3 +17,8 @@ frontend/dist/
 data/
 tmp/
 output/
+.vs/
+desktop/windows/bin/
+desktop/windows/obj/
+*.suo
+*.user
