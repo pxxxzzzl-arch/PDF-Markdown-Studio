@@ -22,6 +22,25 @@ if ($env:OS -ne "Windows_NT") {
     throw "Windows 冒烟测试只能在 Windows 上运行。"
 }
 
+function Write-SmokeDiagnostics {
+    param([Parameter(Mandatory = $true)][string]$AppHome)
+
+    foreach ($name in @("desktop.log", "console.log")) {
+        $path = Join-Path $AppHome "logs\$name"
+        try {
+            if (Test-Path -LiteralPath $path -PathType Leaf) {
+                Write-Host ""
+                Write-Host "===== $name (last 200 lines) ====="
+                Get-Content -LiteralPath $path -Tail 200 -ErrorAction Stop |
+                    ForEach-Object { Write-Host $_ }
+            }
+        }
+        catch {
+            Write-Warning "无法读取冒烟测试日志 ${path}：$($_.Exception.Message)"
+        }
+    }
+}
+
 $appDirectoryPath = [System.IO.Path]::GetFullPath($AppDirectory)
 $samplePdfPath = [System.IO.Path]::GetFullPath($SamplePdf)
 $workDirectoryPath = [System.IO.Path]::GetFullPath($WorkDirectory)
@@ -106,10 +125,12 @@ try {
         catch {
             Write-Warning "无法终止超时的冒烟测试进程：$($_.Exception.Message)"
         }
+        Write-SmokeDiagnostics -AppHome $appHome
         throw "Windows 应用冒烟测试在 $TimeoutSeconds 秒内未退出。"
     }
     if ($process.ExitCode -ne 0) {
         $logFile = Join-Path $appHome "logs\desktop.log"
+        Write-SmokeDiagnostics -AppHome $appHome
         throw "Windows 应用冒烟测试失败（退出码 $($process.ExitCode)）；日志：$logFile"
     }
 

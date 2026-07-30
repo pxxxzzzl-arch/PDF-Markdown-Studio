@@ -126,6 +126,7 @@ def test_build_script_enforces_full_release_contract() -> None:
     assert '$pythonVersion -ne "3.12"' in script
     assert '"primary,desktop-build,windows-desktop"' in script
     assert "download.pytorch.org/whl/cpu" in script
+    assert "torch.version.cuda is None" in script
     assert "LinkId=2124703" in script
     assert "Get-AuthenticodeSignature" in script
     assert "scripts\\smoke_test_windows.ps1" in script
@@ -150,6 +151,8 @@ def test_packaged_smoke_test_runs_real_http_conversion_and_validates_outputs() -
     assert 'Filter "*-markdown.zip"' in script
     assert "$zipHeader[0] -ne 0x50" in script
     assert '$env:HF_HUB_OFFLINE = "1"' in script
+    assert "Write-SmokeDiagnostics" in script
+    assert "Get-Content -LiteralPath $path -Tail 200" in script
 
 
 def test_inno_installer_is_per_user_and_bootstraps_webview2() -> None:
@@ -166,9 +169,9 @@ def test_inno_installer_is_per_user_and_bootstraps_webview2() -> None:
     assert r'Parameters: "/silent /install"' in script
     assert r'Filename: "{app}\{#WebView2Bootstrapper}"' in script
     assert r"AppMutex={#MyAppMutex}" in script
-    assert r"%LOCALAPPDATA%\PDF Markdown Studio" in script
-    assert r'Name: "{app}"' in script
-    assert r'Name: "{localappdata}\PDF Markdown Studio"' not in script
+    assert 'MessagesFile: "compiler:Default.isl"' in script
+    assert "ChineseSimplified.isl" not in script
+    assert "[UninstallDelete]" not in script
 
 
 def test_windows_workflow_can_publish_exact_release_assets() -> None:

@@ -49,7 +49,6 @@ UsePreviousAppDir=yes
 UsePreviousGroup=yes
 
 [Languages]
-Name: "chinesesimp"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
@@ -72,8 +71,3 @@ Filename: "{app}\{#WebView2Bootstrapper}"; Parameters: "/silent /install"; \
     Flags: runhidden waituntilterminated
 Filename: "{app}\{#MyAppExeName}"; Description: "启动 PDF Markdown Studio"; \
     Flags: nowait postinstall skipifsilent
-
-[UninstallDelete]
-; Deliberately preserve %LOCALAPPDATA%\PDF Markdown Studio. It contains the
-; user's PDFs, conversion results, SQLite history, caches, and diagnostics.
-Type: filesandordirs; Name: "{app}"

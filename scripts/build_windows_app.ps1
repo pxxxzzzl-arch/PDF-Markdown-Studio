@@ -133,6 +133,13 @@ try {
         )
     }
     Invoke-Checked $buildPython @pipArguments
+    if ($Edition -eq "full") {
+        Invoke-Checked $buildPython "-c" (
+            "import torch; " +
+            "assert torch.version.cuda is None, " +
+            "f'Expected CPU-only torch, found CUDA {torch.version.cuda}'"
+        )
+    }
     Invoke-Checked $buildPython "-m" "pip" "install" "--disable-pip-version-check" `
         "reportlab>=4.2,<5"
 
