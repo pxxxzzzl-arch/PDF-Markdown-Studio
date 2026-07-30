@@ -79,6 +79,12 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
           "release_tag=$releaseTag" >> $env:GITHUB_OUTPUT
 
+      - name: Build web frontend
+        shell: pwsh
+        run: |
+          npm --prefix frontend ci
+          npm --prefix frontend run build -- --mode desktop
+
       - name: Install test dependencies
         shell: pwsh
         run: python -m pip install -e ".[dev]"
