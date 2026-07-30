@@ -179,6 +179,10 @@ def test_windows_workflow_can_publish_exact_release_assets() -> None:
     assert "runs-on: windows-2022" in workflow
     assert 'python-version: "3.12"' in workflow
     assert 'node-version: "22"' in workflow
+    assert "npm --prefix frontend run build -- --mode desktop" in workflow
+    assert workflow.index("npm --prefix frontend run build") < workflow.index(
+        'python -m pip install -e ".[dev]"'
+    )
     assert "build_windows_app.ps1 -Edition full" in workflow
     assert "gh release create" in workflow
     assert "gh release upload" in workflow
