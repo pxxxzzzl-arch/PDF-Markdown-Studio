@@ -73,7 +73,7 @@ def test_macos_workflow_builds_and_publishes_verified_arm64_assets() -> None:
     assert 'node-version: "22"' in workflow
     assert "[desktop-release]" in workflow
     assert "[macos-release]" in workflow
-    assert "group: desktop-release-${{ github.ref }}" in workflow
+    assert "group: macos-release-${{ github.ref }}" in workflow
     assert "npm --prefix frontend ci" in workflow
     assert "npm --prefix frontend run build -- --mode desktop" in workflow
     assert '"docling==2.114.0"' in workflow

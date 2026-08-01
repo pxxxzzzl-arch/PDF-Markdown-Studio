@@ -22,7 +22,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: desktop-release-${{ github.ref }}
+  group: macos-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
