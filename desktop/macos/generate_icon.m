@@ -8,9 +8,32 @@ int main(int argc, const char *argv[]) {
             return 2;
         }
 
-        NSSize size = NSMakeSize(1024, 1024);
-        NSImage *image = [[NSImage alloc] initWithSize:size];
-        [image lockFocus];
+        const NSInteger pixelSize = 1024;
+        NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc]
+            initWithBitmapDataPlanes:NULL
+                          pixelsWide:pixelSize
+                          pixelsHigh:pixelSize
+                       bitsPerSample:8
+                     samplesPerPixel:4
+                            hasAlpha:YES
+                            isPlanar:NO
+                      colorSpaceName:NSCalibratedRGBColorSpace
+                         bitmapFormat:0
+                          bytesPerRow:0
+                         bitsPerPixel:0];
+        if (bitmap == nil) {
+            fprintf(stderr, "failed to allocate icon bitmap\n");
+            return 1;
+        }
+        bitmap.size = NSMakeSize(pixelSize, pixelSize);
+        NSGraphicsContext *context =
+            [NSGraphicsContext graphicsContextWithBitmapImageRep:bitmap];
+        if (context == nil) {
+            fprintf(stderr, "failed to create icon graphics context\n");
+            return 1;
+        }
+        [NSGraphicsContext saveGraphicsState];
+        [NSGraphicsContext setCurrentContext:context];
 
         [[NSColor colorWithCalibratedRed:0.95 green:0.93 blue:0.88 alpha:1] setFill];
         [[NSBezierPath bezierPathWithRoundedRect:NSMakeRect(0, 0, 1024, 1024)
@@ -30,10 +53,8 @@ int main(int argc, const char *argv[]) {
             NSParagraphStyleAttributeName : paragraph,
         };
         [@"M↓" drawInRect:NSMakeRect(174, 342, 676, 300) withAttributes:attributes];
-        [image unlockFocus];
-
-        NSBitmapImageRep *bitmap =
-            [[NSBitmapImageRep alloc] initWithData:image.TIFFRepresentation];
+        [context flushGraphics];
+        [NSGraphicsContext restoreGraphicsState];
         NSData *png = [bitmap representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
         NSURL *destination =
             [NSURL fileURLWithPath:[NSString stringWithUTF8String:argv[1]]];

@@ -1,0 +1,246 @@
+name: macOS desktop release
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: Create or update a GitHub Release after the build
+        required: true
+        type: boolean
+        default: false
+      release_tag:
+        description: Release tag (blank uses v<project-version>)
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-macos-arm64:
+    name: macOS 14 / Apple Silicon / Full offline
+    if: >-
+      github.event_name != 'push' ||
+      startsWith(github.ref, 'refs/tags/v') ||
+      contains(github.event.head_commit.message, '[desktop-release]')
+    runs-on: macos-14
+    timeout-minutes: 240
+
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_CACHE_DIR: "1"
+      PYTHONUTF8: "1"
+      HF_HOME: ${{ runner.temp }}/pdfmd-huggingface
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python 3.12 arm64
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+          architecture: arm64
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Resolve release metadata
+        id: metadata
+        shell: bash
+        env:
+          REQUESTED_RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          version="$(python -c "import sys; sys.path.insert(0, 'src'); import pdfmd; print(pdfmd.__version__)")"
+          release_tag="$(python -c 'import os; print(os.environ.get("REQUESTED_RELEASE_TAG", "").strip())')"
+          if [[ -z "$release_tag" ]]; then
+            release_tag="v$version"
+          fi
+          if [[ "$release_tag" != "v$version" ]]; then
+            echo "Release tag $release_tag does not match project version v$version." >&2
+            exit 1
+          fi
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* && "${{ github.ref_name }}" != "v$version" ]]; then
+            echo "Tag ${{ github.ref_name }} does not match project version v$version." >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Verify native Apple Silicon runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(uname -m)" == "arm64" ]] || {
+            echo "Expected an arm64 runner, received $(uname -m)." >&2
+            exit 1
+          }
+
+      - name: Install web frontend dependencies
+        run: npm --prefix frontend ci
+
+      - name: Build web frontend
+        run: npm --prefix frontend run build -- --mode desktop
+
+      - name: Install test and desktop build dependencies
+        run: |
+          python -m pip install -e ".[dev,desktop-build]" "docling==2.114.0"
+
+      - name: Run Python tests
+        run: python -m pytest -q --timeout=90
+
+      - name: Run Python lint
+        run: python -m ruff check src tests scripts
+
+      - name: Download pinned offline Docling models
+        run: python scripts/prepare_macos_models.py --hf-home "$HF_HOME"
+
+      - name: Build Full offline macOS application
+        env:
+          PDFMD_DESKTOP_EDITION: full
+          PDFMD_BUNDLE_MODELS: "1"
+          PDFMD_DESKTOP_REUSE_SOURCE_ENV: "1"
+          PDFMD_MODEL_CACHE_SOURCE: ${{ env.HF_HOME }}
+        run: |
+          export PDFMD_BUILD_PYTHON="$(python -c 'import sys; print(sys.executable)')"
+          make macos-app
+
+      - name: Verify application and release assets
+        shell: bash
+        env:
+          VERSION: ${{ steps.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          asset_name="PDF-Markdown-Studio-$VERSION-macOS-arm64.zip"
+          sums_name="PDF-Markdown-Studio-$VERSION-macOS-arm64-SHA256SUMS.txt"
+          asset_path="dist/$asset_name"
+          sums_path="dist/$sums_name"
+          [[ -f "$asset_path" ]] || { echo "Missing release asset: $asset_path" >&2; exit 1; }
+          asset_size="$(stat -f %z "$asset_path")"
+          (( asset_size > 0 && asset_size < 2147483648 )) || {
+            echo "Release asset must be non-empty and smaller than 2 GiB: $asset_path" >&2
+            exit 1
+          }
+
+          verify_root="$RUNNER_TEMP/pdfmd-macos-verify"
+          rm -rf "$verify_root"
+          mkdir -p "$verify_root"
+          /usr/bin/ditto -x -k "$asset_path" "$verify_root"
+          app="$verify_root/PDF Markdown Studio.app"
+          executable="$app/Contents/MacOS/PDF Markdown Studio"
+          server="$app/Contents/Resources/server/pdfmd-desktop-server"
+          [[ -d "$app" && -x "$executable" && -x "$server" ]]
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")" == "$VERSION" ]]
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app/Contents/Info.plist")" == "$VERSION" ]]
+          [[ "$(/usr/bin/lipo -archs "$executable")" == "arm64" ]]
+          [[ "$(/usr/bin/lipo -archs "$server")" == "arm64" ]]
+          /usr/bin/codesign --verify --deep --strict "$app"
+
+          model_hub="$app/Contents/Resources/model-cache/huggingface/hub"
+          for model in \
+            models--docling-project--docling-layout-heron \
+            models--docling-project--docling-models \
+            models--docling-project--CodeFormulaV2; do
+            [[ -d "$model_hub/$model" ]] || { echo "Missing bundled model: $model" >&2; exit 1; }
+          done
+          [[ -z "$(find -L "$model_hub" -type l -print -quit)" ]] || {
+            echo "Bundled model cache contains broken symbolic links." >&2
+            exit 1
+          }
+
+          smoke_root="$RUNNER_TEMP/pdfmd-macos-smoke"
+          rm -rf "$smoke_root"
+          mkdir -p "$smoke_root"
+          PDFMD_DATA_DIR="$smoke_root/data" "$server" --port-file "$smoke_root/port" >"$smoke_root/server.log" 2>&1 &
+          server_pid=$!
+          cleanup() {
+            kill "$server_pid" 2>/dev/null || true
+            wait "$server_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          healthy=0
+          for _ in {1..300}; do
+            if [[ -s "$smoke_root/port" ]]; then
+              port="$(<"$smoke_root/port")"
+              if curl --fail --silent --show-error "http://127.0.0.1:$port/api/health" >"$smoke_root/health.json"; then
+                healthy=1
+                break
+              fi
+            fi
+            kill -0 "$server_pid" 2>/dev/null || {
+              cat "$smoke_root/server.log" >&2
+              exit 1
+            }
+            sleep 0.1
+          done
+          [[ "$healthy" == "1" ]] || { cat "$smoke_root/server.log" >&2; exit 1; }
+          python - "$smoke_root/health.json" "$VERSION" <<'PY'
+          import json
+          import sys
+
+          health = json.load(open(sys.argv[1], encoding="utf-8"))
+          assert health["status"] == "ok"
+          assert health["version"] == sys.argv[2]
+          assert any(
+              engine["name"] == "docling" and engine["available"]
+              for engine in health["engines"]
+          )
+          PY
+          cleanup
+          trap - EXIT
+
+          (cd dist && shasum -a 256 "$asset_name" >"$sums_name")
+          [[ -s "$sums_path" ]]
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: PDF-Markdown-Studio-${{ steps.metadata.outputs.version }}-macOS-arm64
+          path: |
+            dist/PDF-Markdown-Studio-${{ steps.metadata.outputs.version }}-macOS-arm64.zip
+            dist/PDF-Markdown-Studio-${{ steps.metadata.outputs.version }}-macOS-arm64-SHA256SUMS.txt
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Create or update GitHub Release
+        if: >-
+          startsWith(github.ref, 'refs/tags/v') ||
+          (github.event_name == 'push' &&
+            contains(github.event.head_commit.message, '[desktop-release]')) ||
+          (github.event_name == 'workflow_dispatch' && inputs.create_release)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.release_tag }}
+          VERSION: ${{ steps.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            if ! gh release create "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "PDF Markdown Studio $VERSION" \
+              --generate-notes; then
+              gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+            fi
+          fi
+          gh release upload "$RELEASE_TAG" \
+            "dist/PDF-Markdown-Studio-$VERSION-macOS-arm64.zip" \
+            "dist/PDF-Markdown-Studio-$VERSION-macOS-arm64-SHA256SUMS.txt" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber

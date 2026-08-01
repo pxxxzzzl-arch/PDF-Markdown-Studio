@@ -65,6 +65,13 @@ dist/PDF Markdown Studio.app
 dist/PDF-Markdown-Studio-<version>-macOS-arm64.zip
 ```
 
+0.9.1 GitHub Release 应包含：
+
+```text
+PDF-Markdown-Studio-0.9.1-macOS-arm64.zip
+PDF-Markdown-Studio-0.9.1-macOS-arm64-SHA256SUMS.txt
+```
+
 默认构建 `full` 版本并封装 Docling。只需要 Native 轻量引擎时：
 
 ```bash
@@ -91,6 +98,10 @@ PDFMD_DESKTOP_REUSE_SOURCE_ENV=1 make macos-app
 ```
 
 脚本目前只执行 ad-hoc 签名，未使用 Apple Developer ID，也未公证。对外分发前应补齐正式签名、notarization 和干净机器验证。
+
+`.github/workflows/macos-release.yml` 使用固定的 `macos-14` 原生 arm64 runner、Python 3.12、Node.js 22 和 Docling 2.114.0。它会下载并验证三个固定版本的离线模型，构建 `full` 包，检查应用版本、Mach-O 架构、ad-hoc 签名、内置模型、内置服务健康状态和 2 GiB Release 限制，再生成 SHA-256 文件。带有 `[desktop-release]` 的 `main` 提交会同时触发 Windows 与 macOS 0.9.1 构建；普通 `main` 提交不会执行桌面发行任务。两个工作流使用相同并发组，避免同时创建同一个 Release。
+
+公开 Release 当前仍是 ad-hoc 签名且未公证的预览构建。正式分发还需要 Developer ID Application、Hardened Runtime、`notarytool` 公证和凭证装订；在这些凭据配置前，不得把包描述为 Apple 已验证版本。
 
 ## 前端与 wheel
 

@@ -185,6 +185,8 @@ def test_windows_workflow_can_publish_exact_release_assets() -> None:
 
     assert "workflow_dispatch:" in workflow
     assert "create_release:" in workflow
+    assert "[desktop-release]" in workflow
+    assert "group: desktop-release-${{ github.ref }}" in workflow
     assert "runs-on: windows-2022" in workflow
     assert 'python-version: "3.12"' in workflow
     assert 'node-version: "22"' in workflow
@@ -203,7 +205,9 @@ def test_windows_workflow_can_publish_exact_release_assets() -> None:
     assert "inputs.create_release" in workflow
     assert '$releaseTag = $releaseTag.Trim()' in workflow
     assert 'if ($releaseTag -ne "v$version")' in workflow
+    assert '"${{ github.ref }}" -like "refs/tags/*"' in workflow
     assert "does not match project version v$version" in workflow
+    assert "Unable to create or locate release" in workflow
     assert ".Length -ge 2GB" in workflow
     version_prefix = "PDF-Markdown-Studio-${{ steps.metadata.outputs.version }}"
     assert f"{version_prefix}-Windows-x64-Portable.zip" in workflow

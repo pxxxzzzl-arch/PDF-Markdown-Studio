@@ -174,6 +174,20 @@ def test_macos_wrapper_supports_native_file_panels_and_offline_models() -> None:
     assert 'echo "  发行类型：$EDITION"' in build_script
 
 
+def test_macos_icon_generator_is_pixel_stable_on_retina_displays() -> None:
+    project_root = Path(__file__).resolve().parents[1]
+    generator = (project_root / "desktop" / "macos" / "generate_icon.m").read_text(
+        encoding="utf-8"
+    )
+
+    assert "const NSInteger pixelSize = 1024" in generator
+    assert "pixelsWide:pixelSize" in generator
+    assert "pixelsHigh:pixelSize" in generator
+    assert "graphicsContextWithBitmapImageRep:bitmap" in generator
+    assert "lockFocus" not in generator
+    assert "TIFFRepresentation" not in generator
+
+
 def test_icns_builder_emits_valid_container_and_checks_dimensions(tmp_path: Path) -> None:
     iconset = tmp_path / "AppIcon.iconset"
     iconset.mkdir()
