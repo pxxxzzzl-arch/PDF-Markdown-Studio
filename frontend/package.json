@@ -1,11 +1,13 @@
 {
   "name": "pdf-markdown-studio-frontend",
   "private": true,
-  "version": "0.9.0",
+  "version": "0.9.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postbuild": "npm run check:version",
+    "check:version": "node scripts/check-built-version.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

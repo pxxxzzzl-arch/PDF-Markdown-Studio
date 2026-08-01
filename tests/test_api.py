@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from pdfmd import __version__
 from pdfmd.api import create_app
 from pdfmd.config import Settings
 from pdfmd.models import JobRecord, JobStatus
@@ -23,7 +24,7 @@ def test_api_serves_health_and_built_frontend(tmp_path: Path) -> None:
 
         assert health.status_code == 200
         assert health.json()["status"] == "ok"
-        assert health.json()["version"] == "0.9.0"
+        assert health.json()["version"] == __version__
         assert index.status_code == 200
         assert "PDF Markdown Studio" in index.text
         assert index.headers["cache-control"] == "no-store"

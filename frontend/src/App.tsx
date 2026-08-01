@@ -674,7 +674,7 @@ export default function App() {
               : "正在检测引擎"}
           </div>
           <div className="privacy-pill"><i /> 文件仅在本机处理</div>
-          <span className="version-pill">v0.8</span>
+          <span className="version-pill">{__APP_VERSION_LABEL__}</span>
         </div>
       </header>
 

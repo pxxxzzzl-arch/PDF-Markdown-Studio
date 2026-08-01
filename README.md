@@ -1,4 +1,4 @@
-# PDF Markdown Studio 0.9.0
+# PDF Markdown Studio 0.9.1
 
 把 PDF 拖进本地软件，转换为结构清晰的 Markdown。文件、任务记录和转换结果默认只保存在你的电脑上。
 
@@ -16,13 +16,13 @@
 
 在 [Releases](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/releases/latest) 页面选择一种：
 
-- **安装版（推荐）**：下载 `PDF-Markdown-Studio-0.9.0-Windows-x64-Setup.exe`，双击后按向导安装。
-- **便携版**：下载 `PDF-Markdown-Studio-0.9.0-Windows-x64-Portable.zip`，完整解压后双击 `PDF Markdown Studio.exe`，无需安装。
+- **安装版（推荐）**：下载 `PDF-Markdown-Studio-0.9.1-Windows-x64-Setup.exe`，双击后按向导安装。
+- **便携版**：下载 `PDF-Markdown-Studio-0.9.1-Windows-x64-Portable.zip`，完整解压后双击 `PDF Markdown Studio.exe`，无需安装。
 
 两种包都内含应用所需的 Python 服务、Docling 运行时和网页界面，不需要另外安装 Python、Node.js 或 Git。首次使用 Docling 时仍需联网下载模型；退出桌面窗口后，本地服务也会随之关闭。
 便携版不会注册卸载项；更新时建议解压到新目录，不要覆盖正在运行的旧版本。
 
-> 当前 Windows 包尚未进行商业代码签名，SmartScreen 可能显示“未知发布者”。请只从本项目 Releases 下载，并在核对来源后选择“更多信息 → 仍要运行”。如果 Release 页面尚未出现上述文件，说明 0.9.0 安装包仍在发布中，请先使用源码版。
+> 当前 Windows 包尚未进行商业代码签名，SmartScreen 可能显示“未知发布者”。请只从本项目 Releases 下载，并在核对来源后选择“更多信息 → 仍要运行”。若页面尚未出现上述文件，说明相应版本尚未完成发布，请先使用源码版。
 
 ### macOS
 
@@ -54,7 +54,8 @@
 
 ### macOS、Linux 或 WSL
 
-首次使用需要 Python 3.11–3.13、Node.js 20+、Git 和 Make：
+首次使用需要 Python 3.11–3.13、Node.js 20.19+ 或 22.12+（推荐 Node.js 22 LTS）、
+Git 和 Make：
 
 ```bash
 git clone https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio.git
@@ -68,7 +69,8 @@ make run
 ### Windows PowerShell 源码版
 
 普通 Windows 用户推荐直接下载前面的安装版或便携版。需要从源码运行网页时，请先安装
-Python 3.11–3.13、Node.js 20+ 和 Git，然后在 PowerShell 中执行：
+Python 3.11–3.13、Node.js 20.19+ 或 22.12+（推荐 Node.js 22 LTS）和 Git，然后在
+PowerShell 中执行：
 
 ```powershell
 git clone https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio.git

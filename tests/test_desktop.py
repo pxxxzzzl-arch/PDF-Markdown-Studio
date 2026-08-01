@@ -167,6 +167,11 @@ def test_macos_wrapper_supports_native_file_panels_and_offline_models() -> None:
     assert "8f39ad3c0b4c58e9c2d2c84a38465abf757272d8" in build_script
     assert "fc0f2d45e2218ea24bce5045f58a389aed16dc23" in build_script
     assert "ecedbe111d15c2dc60bfd4a823cbe80127b58af4" in build_script
+    assert '"$SOURCE_PYTHON" -m pip wheel' in build_script
+    assert "--no-deps" in build_script
+    assert "-m hatchling" not in build_script
+    assert 'echo "  应用版本：$VERSION"' in build_script
+    assert 'echo "  发行类型：$EDITION"' in build_script
 
 
 def test_icns_builder_emits_valid_container_and_checks_dimensions(tmp_path: Path) -> None:

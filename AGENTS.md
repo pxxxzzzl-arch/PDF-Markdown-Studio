@@ -40,9 +40,9 @@ macOS 原生应用壳，并用结构化文档模型与质量门控减少静默�
 
 ## 当前状态与下一步
 
-- 当前版本为 0.9.0；界面支持单文件/批量转换、批量选择下载和任务历史
+- 当前版本为 0.9.1；界面支持单文件/批量转换、批量选择下载和任务历史
 - macOS 默认窗口为 1180×780，最小 960×680；完整包包含离线 Docling 模型
 - Windows 10/11 x64 使用 pywebview + Edge WebView2，提供安装器与便携 ZIP
-- 当前发行物仅为 ad-hoc 签名，尚未 Developer ID 签名或公证
+- Windows 发行物尚未 Authenticode 签名；macOS 自行构建产物仅为 ad-hoc 签名且未公证
 - Git 已建立可恢复提交基线并连接 GitHub 远端
 - 下一步优先完成 Windows Authenticode 与 macOS Developer ID 签名，并补前端组件测试

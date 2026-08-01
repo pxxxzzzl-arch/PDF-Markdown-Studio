@@ -8,7 +8,7 @@
 
 ### 便携版无法启动或提示缺少文件
 
-不要在 ZIP 预览窗口中直接运行。先把整个 `PDF-Markdown-Studio-0.9.0-Windows-x64-Portable.zip` 解压到普通目录，再双击 `PDF Markdown Studio.exe`；不要只复制单个 EXE。
+不要在 ZIP 预览窗口中直接运行。先把整个 `PDF-Markdown-Studio-0.9.1-Windows-x64-Portable.zip` 解压到普通目录，再双击 `PDF Markdown Studio.exe`；不要只复制单个 EXE。
 
 如果安全软件隔离了 PyInstaller 运行文件，请先核对 Release 来源和 SHA-256，再检查隔离记录。不要通过关闭全部安全防护来解决。
 

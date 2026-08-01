@@ -60,7 +60,11 @@ echo "构建前端界面…"
 npm --prefix frontend run build -- --mode desktop
 
 echo "构建 Python 安装包…"
-"$SOURCE_PYTHON" -m hatchling build -t wheel
+"$SOURCE_PYTHON" -m pip wheel \
+  --disable-pip-version-check \
+  --no-deps \
+  --wheel-dir "$PROJECT_DIR/dist" \
+  "$PROJECT_DIR"
 WHEEL_PATH="$PROJECT_DIR/dist/pdf_markdown_studio-$VERSION-py3-none-any.whl"
 
 rm -rf "$BUILD_ROOT"
@@ -282,4 +286,5 @@ echo
 echo "构建完成："
 echo "  $APP_BUNDLE"
 echo "  $ZIP_PATH"
-echo "  版本：$EDITION"
+echo "  应用版本：$VERSION"
+echo "  发行类型：$EDITION"

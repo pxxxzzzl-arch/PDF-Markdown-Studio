@@ -18,6 +18,11 @@ INSTALLER_FILE = PROJECT_ROOT / "desktop" / "windows" / "installer.iss"
 MANIFEST_FILE = PROJECT_ROOT / "desktop" / "windows" / "app.manifest"
 WORKFLOW_FILE = PROJECT_ROOT / ".github" / "workflows" / "windows-release.yml"
 README_FILE = PROJECT_ROOT / "README.md"
+BUILDING_DOC_FILE = PROJECT_ROOT / "docs" / "building.md"
+DEVELOPMENT_DOC_FILE = PROJECT_ROOT / "docs" / "development.md"
+PROJECT_VERSION = tomllib.loads(
+    (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+)["project"]["version"]
 
 
 def _load_prepare_module() -> ModuleType:
@@ -55,7 +60,7 @@ def test_asset_preparation_generates_valid_multisize_icon_and_version_info(
 ) -> None:
     module = _load_prepare_module()
 
-    result = module.prepare_assets(tmp_path / "windows-build", "0.9.0")
+    result = module.prepare_assets(tmp_path / "windows-build", PROJECT_VERSION)
 
     assert set(result) == {"icon", "version_info", "version"}
     icon = Path(result["icon"])
@@ -74,12 +79,13 @@ def test_asset_preparation_generates_valid_multisize_icon_and_version_info(
         assert image.startswith(b"\x89PNG\r\n\x1a\n")
 
     version_text = version_info.read_text(encoding="utf-8")
-    assert "filevers=(0, 9, 0, 0)" in version_text
-    assert "StringStruct('ProductVersion', '0.9.0')" in version_text
+    version_parts = tuple(int(part) for part in PROJECT_VERSION.split("."))
+    assert f"filevers={(*version_parts, 0)}" in version_text
+    assert f"StringStruct('ProductVersion', '{PROJECT_VERSION}')" in version_text
     assert "StringStruct('OriginalFilename', 'PDF Markdown Studio.exe')" in version_text
 
 
-@pytest.mark.parametrize("version", ["", "v0.9.0", "0.9.beta", "../../payload"])
+@pytest.mark.parametrize("version", ["", "v1.2.3", "0.9.beta", "../../payload"])
 def test_asset_preparation_rejects_invalid_versions(tmp_path: Path, version: str) -> None:
     module = _load_prepare_module()
 
@@ -195,6 +201,9 @@ def test_windows_workflow_can_publish_exact_release_assets() -> None:
     assert "gh release create" in workflow
     assert "gh release upload" in workflow
     assert "inputs.create_release" in workflow
+    assert '$releaseTag = $releaseTag.Trim()' in workflow
+    assert 'if ($releaseTag -ne "v$version")' in workflow
+    assert "does not match project version v$version" in workflow
     assert ".Length -ge 2GB" in workflow
     version_prefix = "PDF-Markdown-Studio-${{ steps.metadata.outputs.version }}"
     assert f"{version_prefix}-Windows-x64-Portable.zip" in workflow
@@ -209,3 +218,20 @@ def test_readme_download_names_match_windows_release_outputs() -> None:
 
     assert f"PDF-Markdown-Studio-{version}-Windows-x64-Portable.zip" in readme
     assert f"PDF-Markdown-Studio-{version}-Windows-x64-Setup.exe" in readme
+
+
+def test_documented_build_tool_versions_match_packaging_requirements() -> None:
+    building = _read(BUILDING_DOC_FILE)
+    development = _read(DEVELOPMENT_DOC_FILE)
+    readme = _read(README_FILE)
+    node_requirement = "Node.js 20.19+ 或 22.12+"
+
+    assert "- Python 3.12 x64" in building
+    assert "Python 3.11–3.13 x64" not in building
+    assert all(
+        node_requirement in document
+        for document in (building, development, readme)
+    )
+    assert "Node.js 20 或更高版本" not in building
+    assert "Node.js 20 或更高版本" not in development
+    assert "Node.js 20+" not in readme

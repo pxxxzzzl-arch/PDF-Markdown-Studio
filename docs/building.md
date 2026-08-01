@@ -7,8 +7,8 @@
 ### 构建环境
 
 - Windows 10 1809+ 或 Windows 11 x64
-- Python 3.11–3.13 x64
-- Node.js 20 或更高版本
+- Python 3.12 x64
+- Node.js 20.19+ 或 22.12+（推荐 Node.js 22 LTS）
 - PowerShell
 - 用于生成安装版的 Inno Setup 6
 
@@ -27,12 +27,12 @@ py -3.12 -m venv .venv
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build_windows_app.ps1
 ```
 
-0.9.0 Release 应包含：
+0.9.1 Release 应包含：
 
 ```text
-PDF-Markdown-Studio-0.9.0-Windows-x64-Setup.exe
-PDF-Markdown-Studio-0.9.0-Windows-x64-Portable.zip
-PDF-Markdown-Studio-0.9.0-Windows-x64-SHA256SUMS.txt
+PDF-Markdown-Studio-0.9.1-Windows-x64-Setup.exe
+PDF-Markdown-Studio-0.9.1-Windows-x64-Portable.zip
+PDF-Markdown-Studio-0.9.1-Windows-x64-SHA256SUMS.txt
 ```
 
 安装版适合普通用户；便携版必须完整解压后运行，不能直接在 ZIP 预览窗口内启动。两种版本都应从同一次已验证构建产生，避免前端、后端或版本号不一致。
@@ -48,7 +48,7 @@ Windows 构建当前未使用商业代码签名证书。发布前应在干净的
 - Apple Silicon Mac
 - macOS 14 或更高版本
 - Python 3.11–3.13
-- Node.js 20 或更高版本
+- Node.js 20.19+ 或 22.12+（推荐 Node.js 22 LTS）
 - Xcode Command Line Tools
 
 准备源码环境后执行：

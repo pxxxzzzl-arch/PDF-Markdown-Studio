@@ -5,7 +5,7 @@
 ## 环境要求
 
 - Python 3.11–3.13
-- Node.js 20 或更高版本
+- Node.js 20.19+ 或 22.12+（推荐 Node.js 22 LTS）
 - Git
 - macOS / Linux：Make
 - 推荐至少 8 GB 内存；完整 Docling 模型建议 16 GB

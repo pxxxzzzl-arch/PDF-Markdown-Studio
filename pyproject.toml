@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pdf-markdown-studio"
-version = "0.9.0"
+version = "0.9.1"
 description = "Local-first PDF to Markdown converter with pluggable parsing engines and quality gates"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
