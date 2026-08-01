@@ -72,6 +72,7 @@ def test_macos_workflow_builds_and_publishes_verified_arm64_assets() -> None:
     assert 'python-version: "3.12"' in workflow
     assert 'node-version: "22"' in workflow
     assert "[desktop-release]" in workflow
+    assert "[macos-release]" in workflow
     assert "group: desktop-release-${{ github.ref }}" in workflow
     assert "npm --prefix frontend ci" in workflow
     assert "npm --prefix frontend run build -- --mode desktop" in workflow
@@ -82,6 +83,7 @@ def test_macos_workflow_builds_and_publishes_verified_arm64_assets() -> None:
     assert "PDFMD_DESKTOP_EDITION: full" in workflow
     assert 'PDFMD_BUNDLE_MODELS: "1"' in workflow
     assert 'PDFMD_DESKTOP_REUSE_SOURCE_ENV: "1"' in workflow
+    assert "PDFMD_MODEL_CACHE_SOURCE: ${{ runner.temp }}/pdfmd-huggingface" in workflow
     assert "make macos-app" in workflow
     assert "does not match project version" in workflow
     assert "2147483648" in workflow
@@ -92,6 +94,9 @@ def test_macos_workflow_builds_and_publishes_verified_arm64_assets() -> None:
     assert "gh release create" in workflow
     assert "gh release upload" in workflow
     assert "--clobber" in workflow
+
+    job_environment = workflow.split("    env:\n", 1)[1].split("\n\n    steps:", 1)[0]
+    assert "runner.temp" not in job_environment
 
     version_prefix = "PDF-Markdown-Studio-${{ steps.metadata.outputs.version }}"
     assert f"{version_prefix}-macOS-arm64.zip" in workflow
