@@ -7,7 +7,7 @@
 | 系统 | 推荐下载 | 启动方式 |
 | --- | --- | --- |
 | **Windows 10/11 x64** | [打开最新 Release](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/releases/latest) | 安装版或免安装便携版，支持 Windows 10 1809+ |
-| macOS 14+ Apple Silicon | 当前尚无 Release 安装包 | 使用[本地网页版](#从源码运行本地网页版)，或[自行构建](docs/building.md#macos) |
+| **macOS 14+ Apple Silicon** | [下载 macOS 0.9.1](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/releases/download/v0.9.1/PDF-Markdown-Studio-0.9.1-macOS-arm64.zip) | 完整解压后拖入“应用程序”，首次启动请右键选择“打开” |
 | Linux / 其他系统 | [下载源码](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/archive/refs/heads/main.zip) | 运行本地网页版 |
 
 只想在浏览器里使用？直接看[本地网页版启动说明](#从源码运行本地网页版)。网页和转换服务都运行在你的电脑上，不需要部署服务器或注册账号。
@@ -26,7 +26,19 @@
 
 ### macOS
 
-当前 GitHub Releases 尚未提供 macOS 安装包。Apple Silicon Mac 可以先使用下方本地网页版；开发者也可运行 `make macos-app` 自行构建 ad-hoc 签名的 `.app`。详细要求见[构建与发布](docs/building.md#macos)。
+macOS 14 或更高版本的 Apple Silicon Mac（M1/M2/M3/M4 等）可直接使用：
+
+1. 下载 [`PDF-Markdown-Studio-0.9.1-macOS-arm64.zip`](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/releases/download/v0.9.1/PDF-Markdown-Studio-0.9.1-macOS-arm64.zip)，不要在 ZIP 预览窗口中运行。
+2. 完整解压，把 `PDF Markdown Studio.app` 拖到“应用程序”文件夹。
+3. 首次启动时在 Finder 中右键应用并选择“打开”。若 macOS 仍阻止启动，先尝试打开一次，再进入“系统设置 → 隐私与安全”，在安全提示旁选择“仍要打开”。
+
+这是约 1.3 GB 的完整离线包，已包含应用所需的 Python 服务、网页界面、Docling 2.114.0 运行时和固定版本的离线模型，不需要另装 Python、Node.js 或 Git。可同时下载 [`PDF-Markdown-Studio-0.9.1-macOS-arm64-SHA256SUMS.txt`](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/releases/download/v0.9.1/PDF-Markdown-Studio-0.9.1-macOS-arm64-SHA256SUMS.txt)，在下载目录执行以下命令并与校验文件比较：
+
+```bash
+shasum -a 256 PDF-Markdown-Studio-0.9.1-macOS-arm64.zip
+```
+
+> 当前公开包使用 ad-hoc 签名且尚未 Apple 公证，因此会出现上述 Gatekeeper 提示。请只从本项目 [v0.9.1 Release](https://github.com/pxxxzzzl-arch/PDF-Markdown-Studio/releases/tag/v0.9.1) 下载。Intel Mac 暂不支持，可改用下方本地网页版；开发者自行构建请参阅[构建与发布](docs/building.md#macos)。
 
 ## 4 步完成转换
 
@@ -135,7 +147,7 @@ Windows PowerShell 对应命令、安装器与便携包制作、模型封装、�
 - 手写体、嵌套或跨页表格、低分辨率扫描件仍可能需要人工校对。
 - `Native` 是无需大型模型的降级引擎，不替代版面分析或 OCR。
 - 当前任务队列面向本地单机；多用户部署应使用隔离的转换进程队列。
-- Windows 包尚未进行商业代码签名；macOS 自行构建包仅为 ad-hoc 签名且未公证。
+- Windows 包尚未进行商业代码签名；macOS Release 与自行构建包目前仅为 ad-hoc 签名且未公证。
 
 ## 开源许可与致谢
 

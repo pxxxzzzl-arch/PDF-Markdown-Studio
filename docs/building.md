@@ -65,7 +65,7 @@ dist/PDF Markdown Studio.app
 dist/PDF-Markdown-Studio-<version>-macOS-arm64.zip
 ```
 
-0.9.1 GitHub Release 应包含：
+0.9.1 GitHub Release 已发布并包含：
 
 ```text
 PDF-Markdown-Studio-0.9.1-macOS-arm64.zip

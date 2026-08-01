@@ -32,13 +32,15 @@ Windows 桌面窗口依赖 WebView2。Setup 会运行随包的微软 bootstrappe
 
 ## macOS
 
-### Releases 中找不到 macOS 安装包
+### macOS Release 如何下载和安装
 
-当前尚未发布 macOS 二进制包。请使用 README 的源码本地网页版，或在 Apple Silicon Mac 上按照[构建说明](building.md#macos)自行生成。
+Apple Silicon Mac 请下载 `PDF-Markdown-Studio-0.9.1-macOS-arm64.zip`，完整解压后把 `PDF Markdown Studio.app` 拖到“应用程序”。不要在 ZIP 预览窗口中直接运行，也不要只复制应用包内的单个文件。Intel Mac 暂不支持该发行包，请使用 README 的源码本地网页版。
 
-### 自行构建的应用提示无法验证开发者
+可同时下载 `PDF-Markdown-Studio-0.9.1-macOS-arm64-SHA256SUMS.txt`，运行 `shasum -a 256 PDF-Markdown-Studio-0.9.1-macOS-arm64.zip` 并与校验文件比较。发行包已内置 Docling 运行时和离线模型，不需要安装 Python 或 Node.js。
 
-当前脚本生成 ad-hoc 签名、未公证的应用。确认应用确由自己从本仓库源码构建后，可在 Finder 中右键应用并选择“打开”。不要对来源不明的应用绕过 Gatekeeper。
+### Release 或自行构建的应用提示无法验证开发者
+
+当前 Release 与构建脚本生成的应用均为 ad-hoc 签名且未公证。确认应用来自本项目 Release 或由自己从本仓库源码构建后，可在 Finder 中右键应用并选择“打开”。若仍被阻止，先尝试打开一次，再进入“系统设置 → 隐私与安全”，在对应提示旁选择“仍要打开”。不要对来源不明的应用绕过 Gatekeeper。
 
 ## 本地网页版
 

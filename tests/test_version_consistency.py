@@ -32,5 +32,13 @@ def test_release_version_is_consistent_across_runtime_frontend_and_docs() -> Non
     assert readme.startswith(f"# PDF Markdown Studio {version}\n")
     assert f"PDF-Markdown-Studio-{version}-Windows-x64-Setup.exe" in readme
     assert f"PDF-Markdown-Studio-{version}-Windows-x64-Portable.zip" in readme
+    mac_zip = f"PDF-Markdown-Studio-{version}-macOS-arm64.zip"
+    mac_sums = f"PDF-Markdown-Studio-{version}-macOS-arm64-SHA256SUMS.txt"
+    assert mac_zip in readme
+    assert mac_zip in building
+    assert mac_zip in troubleshooting
+    assert mac_sums in readme
+    assert mac_sums in building
+    assert mac_sums in troubleshooting
     assert f"PDF-Markdown-Studio-{version}-Windows-x64-SHA256SUMS.txt" in building
     assert f"PDF-Markdown-Studio-{version}-Windows-x64-Portable.zip" in troubleshooting
